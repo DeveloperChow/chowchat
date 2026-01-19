@@ -15,7 +15,13 @@
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial; overscroll-behavior:none;}
     body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     button,input{ font:inherit; }
-    #app{height:100%; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);}
+
+#app{
+  height:100%;
+  position:relative;
+  overflow:hidden;
+}
+
     .hidden{display:none!important;}
 
     /* FIX iOS input zoom + weird taps */
@@ -37,7 +43,13 @@
     .chip{padding:7px 12px; border-radius:18px; background:#101010; border:1px solid #222; color:#cfcfcf; font-size:13px; white-space:nowrap;}
     .chip.active{background:#1a1a1a; border-color:#333; color:#fff;}
 
-    .screenWrap{flex:1; overflow:hidden; position:relative;}
+.screenWrap{
+  flex:1;
+  overflow:hidden;
+  position:relative;
+  pointer-events:auto;
+}
+
     .screens{height:100%; display:flex; width:300%; transform:translateX(-100%); transition:transform .22s ease;}
     .screen{width:100%; height:100%; overflow:auto; background:var(--bg); -webkit-overflow-scrolling:touch;}
 
@@ -83,7 +95,18 @@
     .navbtn.cam.active{background:var(--snap); color:#000; border-color:#d8d100;}
 
     /* Auth */
-    .auth{height:100%; display:flex; align-items:center; justify-content:center; padding:18px;}
+
+.auth{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:10;
+  pointer-events:auto;
+}
+
     .card{width:100%; max-width:420px; border:1px solid #222; background:#070707; border-radius:18px; padding:16px;}
     .logo{font-weight:1000; font-size:34px; letter-spacing:.2px; text-align:center; margin:6px 0 2px;}
     .tag{color:#cfcfcf; text-align:center; font-size:13px; margin-bottom:10px;}
