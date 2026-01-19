@@ -1,24 +1,27 @@
+updated prompt
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
-  />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#000000" />
-  <title>Chow Chat</title>
+  <title>Chowchat</title>
 
   <style>
     :root { --bg:#000; --panel:#0b0b0b; --line:#1b1b1b; --text:#fff; --muted:#9aa0a6; --snap:#fffc00; --blue:#00b2ff; --red:#ff2a2a; }
-    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
     html,body{height:100%; margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial; overscroll-behavior:none;}
-    body{ -webkit-user-select:none; user-select:none; }
+    body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
     button,input{ font:inherit; }
     #app{height:100%; display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);}
     .hidden{display:none!important;}
+
+    /* FIX iOS input zoom + weird taps */
+    input, textarea { font-size:16px; }
+    button, .iconbtn, .navbtn, .row, .tool { touch-action:manipulation; }
 
     .topbar{height:52px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; border-bottom:1px solid var(--line); background:rgba(0,0,0,.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);}
     .topbar .left,.topbar .right{display:flex; align-items:center; gap:10px;}
@@ -52,7 +55,7 @@
     .snapBtn:active{transform:scale(.98);}
     .camHint{position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.65); z-index:5;}
     .camHint.on{display:flex;}
-    .camHint .box{width:min(340px,92vw); border:1px solid #222; background:#070707; border-radius:18px; padding:14px;}
+    .camHint .box{width:min(360px,92vw); border:1px solid #222; background:#070707; border-radius:18px; padding:14px;}
     .camHint .box .h{font-weight:900; margin-bottom:6px;}
     .camHint .box .p{color:#bdbdbd; font-size:13px; line-height:1.35;}
     .camHint .box .b{margin-top:10px; width:100%; padding:12px; border-radius:12px; border:1px solid #222; background:var(--snap); color:#000; font-weight:900;}
@@ -83,8 +86,10 @@
     /* Auth */
     .auth{height:100%; display:flex; align-items:center; justify-content:center; padding:18px;}
     .card{width:100%; max-width:420px; border:1px solid #222; background:#070707; border-radius:18px; padding:16px;}
+    .logo{font-weight:1000; font-size:34px; letter-spacing:.2px; text-align:center; margin:6px 0 2px;}
+    .tag{color:#cfcfcf; text-align:center; font-size:13px; margin-bottom:10px;}
     .card h2{margin:0 0 10px; font-size:18px;}
-    .in{width:100%; padding:12px 12px; margin:8px 0; border-radius:12px; border:1px solid #222; background:#0d0d0d; color:#fff; font-size:14px;}
+    .in{width:100%; padding:12px 12px; margin:8px 0; border-radius:12px; border:1px solid #222; background:#0d0d0d; color:#fff; }
     .btn{width:100%; padding:12px; margin-top:10px; border-radius:12px; border:1px solid #222; background:#141414; color:#fff; font-weight:900; cursor:pointer;}
     .btn:active{transform:scale(.99);}
     .btn.snap{background:var(--snap); color:#000; border-color:#d8d100;}
@@ -93,12 +98,19 @@
     /* Chat */
     .chatPanel{height:100%; display:flex; flex-direction:column;}
     .msgs{flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; background-size:cover; background-position:center; background-repeat:no-repeat; -webkit-overflow-scrolling:touch;}
-    .bubble{max-width:78%; padding:10px 12px; border-radius:16px; border:1px solid #222; background:rgba(15,15,15,.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
+    .bubble{max-width:78%; padding:10px 12px; border-radius:16px; border:1px solid #222; background:rgba(15,15,15,.92); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); position:relative;}
     .bubble.me{align-self:flex-end; background:rgba(26,26,26,.92); border-color:#2a2a2a;}
     .bubble img{max-width:100%; border-radius:14px; display:block;}
     .bubble audio, .bubble video{width:100%; border-radius:14px; background:#000;}
     .bubble .t{font-size:14px; white-space:pre-wrap; word-break:break-word;}
     .bubble .s{margin-top:3px; font-size:11px; color:var(--muted);}
+    .replyBar{margin:-2px 0 8px; padding:8px 10px; border-radius:14px; border:1px solid #222; background:#0b0b0b; color:#ddd; font-size:12px; display:none;}
+    .replyBar.on{display:flex; justify-content:space-between; gap:10px; align-items:center;}
+    .replyBar b{color:#fff;}
+    .replyBar button{border-radius:12px; border:1px solid #222; background:#111; color:#fff; padding:6px 10px; font-weight:900; cursor:pointer;}
+    .replyBar button:active{transform:scale(.98);}
+
+    .quote{border-left:3px solid var(--blue); padding-left:8px; margin-bottom:6px; color:#cfcfcf; font-size:12px;}
     .send{display:flex; gap:8px; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid #111; background:#060606; align-items:center;}
     .send input{flex:1; padding:12px; border-radius:16px; border:1px solid #222; background:#0d0d0d; color:#fff;}
     .send button{padding:0 14px; height:44px; border-radius:16px; border:1px solid #222; background:var(--snap); color:#000; font-weight:900; cursor:pointer;}
@@ -146,12 +158,16 @@
   <!-- AUTH -->
   <div id="authScreen" class="auth">
     <div class="card">
+      <div class="logo">Chowchat</div>
+      <div class="tag">Camera-first chat</div>
+
       <h2>Sign in</h2>
-      <input id="email" class="in" placeholder="Email" autocomplete="email" />
+      <input id="loginUser" class="in" placeholder="Username" autocapitalize="none" autocomplete="username" />
       <input id="pass" class="in" placeholder="Password" type="password" autocomplete="current-password" />
-      <input id="username" class="in" placeholder="Username (signup only, no spaces)" autocapitalize="none" />
+      <input id="signupUser" class="in" placeholder="Username (signup only, no spaces)" autocapitalize="none" />
       <button id="btnLogin" class="btn snap">Login</button>
       <button id="btnSignup" class="btn">Create account</button>
+      <div class="small" style="margin-top:10px;">do not use any password you use on other apps!</div>
       <div class="small" id="authMsg"></div>
     </div>
   </div>
@@ -171,7 +187,7 @@
       <div class="right">
         <div class="iconbtn">🔔</div>
         <div class="iconbtn" id="btnAdd">➕<span id="addBadge" class="badge hidden">0</span></div>
-        <div class="iconbtn" id="btnMenu">⋯</div>
+        <div class="iconbtn" id="btnMenu">⚙️</div>
       </div>
     </div>
 
@@ -199,7 +215,7 @@
           <div class="camHint on" id="camHint">
             <div class="box">
               <div class="h">Enable Camera</div>
-              <div class="p">iPhone Safari usually needs a tap first to allow the camera. Tap below, then allow permission</div>
+              <div class="p">You must be on HTTPS and tap Enable. If it stays black, allow camera permission in Safari settings</div>
               <button class="b" id="btnEnableCam">Enable</button>
             </div>
           </div>
@@ -242,9 +258,7 @@
   <div class="topbar">
     <div class="left" style="gap:8px;">
       <div class="iconbtn" id="btnBack">←</div>
-      <div class="pill" id="chatPill" style="width:34px;height:34px;">
-        C
-      </div>
+      <div class="pill" id="chatPill" style="width:34px;height:34px;">C</div>
       <div class="title" style="cursor:pointer;" id="chatHeaderTap">
         <span id="chatTitle">Chat</span>
         <span id="typingIndicator" class="hidden typingDot"></span>
@@ -260,11 +274,19 @@
 
   <div class="chatPanel">
     <div class="msgs" id="msgs"></div>
-    <div class="send">
-      <div class="camChatBtn" id="btnChatSnap" title="Send snap">📷</div>
-      <input id="msgInput" placeholder="Send a chat" />
-      <div class="micBtn" id="btnMic" title="Hold to voice">🎙️</div>
-      <button id="sendBtn">Send</button>
+
+    <div class="send" style="display:block; padding:10px 10px calc(10px + env(safe-area-inset-bottom));">
+      <div id="replyBar" class="replyBar">
+        <div><b>Replying</b> <span id="replyText"></span></div>
+        <button id="replyCancel">X</button>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="camChatBtn" id="btnChatSnap" title="Send snap">📷</div>
+        <input id="msgInput" placeholder="Send a chat" />
+        <div class="micBtn" id="btnMic" title="Hold to voice">🎙️</div>
+        <button id="sendBtn">Send</button>
+      </div>
     </div>
   </div>
 </div>
@@ -296,8 +318,9 @@
   <div class="sheetCard">
     <div class="sheetTitle">Profile</div>
 
-    <div class="pillStat" style="margin-bottom:8px;">
-      Snapscore <b id="mySnapscore">0</b>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+      <div class="pillStat">Snapscore <b id="mySnapscore">0</b></div>
+      <div class="pillStat">Textscore <b id="myTextscore">0</b></div>
     </div>
 
     <input id="displayName" class="in" placeholder="Display name" />
@@ -315,15 +338,27 @@
   </div>
 </div>
 
+<!-- SETTINGS -->
+<div id="settingsSheet" class="sheet">
+  <div class="sheetCard">
+    <div class="sheetTitle">Settings</div>
+    <input id="newPass" class="in" placeholder="New password (coming soon)" disabled />
+    <div class="small">Password change needs a re-auth flow, we’ll add it next</div>
+    <div class="sheetRow">
+      <button id="btnCloseSettings" class="btn" style="margin:0;">Close</button>
+      <button id="btnLogoutNow" class="btn snap" style="margin:0;">Log out</button>
+    </div>
+  </div>
+</div>
+
 <!-- OTHER USER PROFILE (from chat) -->
 <div id="userSheet" class="sheet">
   <div class="sheetCard">
     <div class="sheetTitle" id="userSheetTitle">User</div>
-    <div class="pillStat" style="margin-bottom:8px;">
-      Snapscore <b id="userSnapscore">0</b>
-    </div>
-    <div class="pillStat" style="margin-bottom:8px;">
-      Streak <b id="userStreak">0</b>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+      <div class="pillStat">Snapscore <b id="userSnapscore">0</b></div>
+      <div class="pillStat">Textscore <b id="userTextscore">0</b></div>
+      <div class="pillStat">Streak <b id="userStreak">0</b></div>
     </div>
     <div class="small" id="userPresence">Offline</div>
     <div class="sheetRow">
@@ -357,18 +392,16 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
+    getAuth, onAuthStateChanged,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
     getFirestore,
     doc, setDoc, getDoc,
     collection, addDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, getDocs, increment
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import {
-    getStorage, ref, uploadBytes, getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
-  // ✅ YOUR FIREBASE CONFIG (NORMAL QUOTES) - unchanged
   const firebaseConfig = {
     apiKey: "AIzaSyA4iSXdKxbyvnD8yMZrl3VW73gvvgU74ik",
     authDomain: "chowchat.firebaseapp.com",
@@ -390,38 +423,46 @@
   const mePill = $("mePill");
   const screens = $("screens"), chipsBar = $("chipsBar"), topTitleText = $("topTitleText");
   const navChats = $("navChats"), navCam = $("navCam"), navStories = $("navStories"), navProfile = $("navProfile"), navLogout = $("navLogout");
-  const btnAdd = $("btnAdd"), addBadge = $("addBadge"), addSheet = $("addSheet");
+  const btnAdd = $("btnAdd"), addSheet = $("addSheet");
   const chatList = $("chatList");
-  const recentList = $("recentList"), requestsList = $("requestsList");
-  const chatModal = $("chatModal"), btnBack = $("btnBack"), chatTitle = $("chatTitle"), typingIndicator = $("typingIndicator"), onlineIndicator = $("onlineIndicator");
+  const requestsList = $("requestsList");
+  const chatModal = $("chatModal"), btnBack = $("btnBack"), chatTitle = $("chatTitle"),
+        typingIndicator = $("typingIndicator"), onlineIndicator = $("onlineIndicator");
   const chatPill = $("chatPill"), chatHeaderTap = $("chatHeaderTap");
   const msgs = $("msgs"), msgInput = $("msgInput"), sendBtn = $("sendBtn");
+  const replyBar = $("replyBar"), replyText = $("replyText"), replyCancel = $("replyCancel");
   const btnWallpaper = $("btnWallpaper"), wallFile = $("wallFile");
   const btnNick = $("btnNick");
-  const profileSheet = $("profileSheet"), btnSaveProfile = $("btnSaveProfile"), profileMsg = $("profileMsg"), pfpFile = $("pfpFile"), displayName = $("displayName");
-  const mySnapscore = $("mySnapscore");
+  const profileSheet = $("profileSheet"), btnSaveProfile = $("btnSaveProfile"),
+        profileMsg = $("profileMsg"), pfpFile = $("pfpFile"), displayName = $("displayName");
+  const mySnapscore = $("mySnapscore"), myTextscore = $("myTextscore");
   const btnCropPfp = $("btnCropPfp");
-  const userSheet = $("userSheet"), userSheetTitle = $("userSheetTitle"), userSnapscore = $("userSnapscore"), userStreak = $("userStreak"), userPresence = $("userPresence"), btnCloseUser = $("btnCloseUser");
-  const cropperSheet = $("cropperSheet"), cropCanvas = $("cropCanvas"), cropZoom = $("cropZoom"), btnCropApply = $("btnCropApply"), btnCropClose = $("btnCropClose");
+  const userSheet = $("userSheet"), userSheetTitle = $("userSheetTitle"),
+        userSnapscore = $("userSnapscore"), userTextscore = $("userTextscore"),
+        userStreak = $("userStreak"), userPresence = $("userPresence"), btnCloseUser = $("btnCloseUser");
+  const cropperSheet = $("cropperSheet"), cropCanvas = $("cropCanvas"),
+        cropZoom = $("cropZoom"), btnCropApply = $("btnCropApply"), btnCropClose = $("btnCropClose");
   const btnChatSnap = $("btnChatSnap");
   const btnMic = $("btnMic");
-
   const findUser = $("findUser"), btnSendReq = $("btnSendReq"), btnCreateGroup = $("btnCreateGroup");
   const btnCloseAdd = $("btnCloseAdd"), btnCloseProfile = $("btnCloseProfile");
   const btnSignOutMini = $("btnSignOutMini");
 
-  // Camera
-  const camVideo = $("camVideo"), btnFlipCam = $("btnFlipCam"), btnCamOnOff = $("btnCamOnOff"), btnSendSnap = $("btnSendSnap");
+  const settingsSheet = $("settingsSheet"), btnCloseSettings = $("btnCloseSettings"),
+        btnLogoutNow = $("btnLogoutNow"), btnMenu = $("btnMenu");
+
+  // Auth inputs
+  const loginUser = $("loginUser"), signupUser = $("signupUser"), pass = $("pass");
+
+// Camera
+  const camVideo = $("camVideo"), btnFlipCam = $("btnFlipCam"),
+        btnCamOnOff = $("btnCamOnOff"), btnSendSnap = $("btnSendSnap"),
+        btnShutter = $("btnShutter");
   const camHint = $("camHint"), btnEnableCam = $("btnEnableCam"), btnRecVid = $("btnRecVid");
   let camStream = null;
   let facing = "user";
   let camOn = false;
   let lastSnapBlob = null;
-
-  // Video recording
-  let vidRecorder = null;
-  let vidChunks = [];
-  let recordingVideo = false;
 
   // Voice recording
   let micStream = null;
@@ -437,24 +478,21 @@
   let activeRoom = null;
   let activeRoomUnsub = null;
   let typingUnsub = null;
-  let presenceUnsub = null;
   let otherUserUnsub = null;
+  let replyTo = null;
 
   // local nickname + wallpaper (per room)
   const nickKey = (roomId) => `nick_${me?.uid}_${roomId}`;
   const wallKey = (roomId) => `wall_${me?.uid}_${roomId}`;
 
-  // ---- Stop iOS double-tap zoom / weird tap delays ----
-  (function(){
-    let lastTouchEnd = 0;
-    document.addEventListener("touchend", (e) => {
-      const now = Date.now();
-      if (now - lastTouchEnd <= 300) e.preventDefault();
-      lastTouchEnd = now;
-    }, { passive:false });
-  })();
+  function toast(msg){
+    const t = document.createElement("div");
+    t.textContent = msg;
+    t.style.cssText = "position:fixed;left:50%;top:16px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #222;color:#fff;padding:10px 12px;border-radius:12px;z-index:9999;font-weight:800;font-size:13px;max-width:92vw;text-align:center;";
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 1600);
+  }
 
-  // Helpers
   function utcDayKey(d=new Date()){
     const y=d.getUTCFullYear();
     const m=String(d.getUTCMonth()+1).padStart(2,"0");
@@ -467,15 +505,6 @@
     return utcDayKey(d);
   }
   function idForPair(a,b){ return [a,b].sort().join("_"); }
-
-  function toast(msg){
-    // ultra simple, non-blocking
-    const t = document.createElement("div");
-    t.textContent = msg;
-    t.style.cssText = "position:fixed;left:50%;top:16px;transform:translateX(-50%);background:rgba(0,0,0,.8);border:1px solid #222;color:#fff;padding:10px 12px;border-radius:12px;z-index:9999;font-weight:800;font-size:13px;max-width:92vw;text-align:center;";
-    document.body.appendChild(t);
-    setTimeout(()=>t.remove(), 1600);
-  }
 
   // UI: screens
   const setScreen = (i) => {
@@ -503,7 +532,27 @@
   navProfile.onclick = () => profileSheet.classList.add("on");
   navLogout.onclick = async () => { await signOut(auth); };
 
-  // Swipe
+  // Settings (top right ⚙️)
+  btnMenu.onclick = () => settingsSheet.classList.add("on");
+  btnCloseSettings.onclick = () => settingsSheet.classList.remove("on");
+  btnLogoutNow.onclick = async () => { await signOut(auth); };
+
+  btnCloseProfile.onclick = () => profileSheet.classList.remove("on");
+  btnCloseUser.onclick = () => userSheet.classList.remove("on");
+  btnCloseAdd.onclick = () => addSheet.classList.remove("on");
+  chatHeaderTap.onclick = () => userSheet.classList.add("on");
+
+  // Stop iOS double-tap zoom + reduce delayed taps
+  (function(){
+    let lastTouchEnd = 0;
+    document.addEventListener("touchend", (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, { passive:false });
+  })();
+
+  // Swipe nav (camera-first)
   const swipeRoot = $("swipeRoot");
   let startX = 0, dx = 0, dragging = false;
   swipeRoot.addEventListener("touchstart", (e) => {
@@ -526,57 +575,77 @@
     else setScreen(screenIndex);
   });
 
-  // ---------- AUTH ----------
-  $("btnLogin").onclick = async () => {
+  // ---------- AUTH (username + password, backed by Firebase Auth email/pass) ----------
+  async function resolveUserByUsername(uname){
+    const qy = query(collection(db,"users"), where("username","==", uname.toLowerCase()), limit(1));
+    const snap = await getDocs(qy);
+    if(snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+  }
+
+  async function doLogin(){
     authMsg.textContent = "";
-    const email = $("email").value.trim();
-    const pass = $("pass").value;
-    try {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      // block "non-existent app account" => if users doc missing, sign out
-      const s = await getDoc(doc(db,"users", cred.user.uid));
-      if(!s.exists()){
-        await signOut(auth);
-        authMsg.textContent = "Account not set up. Use Create account";
-      }
-    } catch (e) { authMsg.textContent = e.message; }
-  };
+    const uname = loginUser.value.trim().toLowerCase();
+    const pw = pass.value;
+    if(!uname || !pw){ authMsg.textContent = "Enter username + password"; return; }
 
-  $("btnSignup").onclick = async () => {
+    const u = await resolveUserByUsername(uname);
+    if(!u){ authMsg.textContent = "Username or password incorrect"; return; }
+
+    try{
+      await signInWithEmailAndPassword(auth, u.email, pw);
+    }catch{
+      authMsg.textContent = "Username or password incorrect";
+    }
+  }
+
+  async function doSignup(){
     authMsg.textContent = "";
-    const email = $("email").value.trim();
-    const pass = $("pass").value;
-    const uname = $("username").value.trim().toLowerCase();
-    if(!uname || /\s/.test(uname)) { authMsg.textContent = "Username required (no spaces)"; return; }
+    const uname = signupUser.value.trim().toLowerCase();
+    const pw = pass.value;
+    if(!uname || /\s/.test(uname)){ authMsg.textContent = "Username required (no spaces)"; return; }
+    if(!pw || pw.length < 6){ authMsg.textContent = "Password must be 6+ chars"; return; }
 
-    const uq = query(collection(db,"users"), where("username","==", uname), limit(1));
-    const ex = await getDocs(uq);
-    if(!ex.empty){ authMsg.textContent = "Username taken"; return; }
+    const exists = await resolveUserByUsername(uname);
+    if(exists){ authMsg.textContent = "Username taken"; return; }
 
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      const u = cred.user;
-      await setDoc(doc(db, "users", u.uid), {
-        uid: u.uid,
+    // fake email so Auth can work, login still uses username
+    const email = `${uname}@chowchat.local`;
+
+    try{
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      const uid = cred.user.uid;
+
+      await setDoc(doc(db,"users",uid),{
+        uid,
         email,
         username: uname,
         displayName: uname,
         photoURL: "",
         snapscore: 0,
+        textscore: 0,
         online: true,
         lastActive: serverTimestamp(),
         createdAt: serverTimestamp()
-      }, { merge:true });
-    } catch (e) { authMsg.textContent = e.message; }
-  };
+      },{merge:true});
 
-  // ---------- PRESENCE (best-effort on Firestore) ----------
+    }catch(e){
+      authMsg.textContent = e.message;
+    }
+  }
+
+  $("btnLogin").onclick = doLogin;
+  $("btnSignup").onclick = doSignup;
+
+  // Enter key should login
+  loginUser.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
+  pass.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
+
+  // ---------- PRESENCE ----------
   let presenceTimer = null;
   async function setPresence(online){
     if(!me) return;
-    try{
-      await setDoc(doc(db,"users", me.uid), { online, lastActive: serverTimestamp() }, {merge:true});
-    }catch{}
+    try{ await setDoc(doc(db,"users",me.uid),{ online, lastActive: serverTimestamp() },{merge:true}); }catch{}
   }
   function startPresence(){
     if(presenceTimer) clearInterval(presenceTimer);
@@ -585,8 +654,7 @@
     window.addEventListener("focus", ()=>setPresence(true));
     window.addEventListener("blur", ()=>setPresence(false));
     document.addEventListener("visibilitychange", ()=>{
-      if(document.visibilityState === "visible") setPresence(true);
-      else setPresence(false);
+      setPresence(document.visibilityState === "visible");
     });
   }
   function stopPresence(){
@@ -595,152 +663,149 @@
     setPresence(false);
   }
 
-  // ---------- PROFILE save (displayName + pfp via crop) ----------
-  let croppedPfpBlob = null;
-
-  btnSaveProfile.onclick = async () => {
-    if(!me) return;
-    profileMsg.textContent = "";
-    try{
-      const userRef = doc(db,"users", me.uid);
-      const updates = {};
-      if(displayName.value.trim()) updates.displayName = displayName.value.trim();
-
-      if(croppedPfpBlob){
-        const r = ref(storage, `pfps/${me.uid}.jpg`);
-        await uploadBytes(r, croppedPfpBlob, { contentType:"image/jpeg" });
-        const url = await getDownloadURL(r);
-        updates.photoURL = url;
-        croppedPfpBlob = null;
-      }
-
-      if(Object.keys(updates).length) await setDoc(userRef, updates, {merge:true});
-      profileMsg.textContent = "Saved";
-      await refreshMeProfile();
-      paintMePill();
-      toast("Saved");
-    }catch(e){ profileMsg.textContent = e.message; }
-  };
-
-  btnCloseProfile.onclick = () => profileSheet.classList.remove("on");
-
-  // ---------- Add Friends ----------
+  // ---------- FRIENDS / REQUESTS ----------
   btnAdd.onclick = () => addSheet.classList.add("on");
-  btnCloseAdd.onclick = () => addSheet.classList.remove("on");
-
-  async function resolveUserByUsername(uname){
-    const qy = query(collection(db,"users"), where("username","==", uname.toLowerCase()), limit(1));
-    const snap = await getDocs(qy);
-    if(snap.empty) return null;
-    return snap.docs[0].data();
-  }
 
   btnSendReq.onclick = async () => {
     if(!me) return;
     const uname = findUser.value.trim().toLowerCase();
     if(!uname) return;
-    const user = await resolveUserByUsername(uname);
-    if(!user){ toast("User not found"); return; }
-    if(user.uid === me.uid){ toast("That's you"); return; }
 
-    const reqId = `${me.uid}_${user.uid}`;
-    await setDoc(doc(db,"friendRequests", reqId), {
-      id: reqId,
+    const other = await resolveUserByUsername(uname);
+    if(!other){ toast("User not found"); return; }
+    if(other.uid === me.uid){ toast("That's you"); return; }
+
+    const reqId = `${me.uid}_${other.uid}`;
+    await setDoc(doc(db,"friendRequests",reqId),{
+      id:reqId,
       from: me.uid,
-      to: user.uid,
-      fromUsername: meProfile?.username || "",
-      toUsername: user.username || "",
-      status: "pending",
+      to: other.uid,
+      status:"pending",
       createdAt: serverTimestamp()
-    }, {merge:true});
-
-    await setDoc(doc(db,"recentlyAdded", `${me.uid}_${user.uid}`), {
-      owner: me.uid,
-      other: user.uid,
-      otherUsername: user.username || "",
-      createdAt: serverTimestamp()
-    }, {merge:true});
+    },{merge:true});
 
     findUser.value = "";
     toast("Request sent");
   };
 
-  async function acceptRequest(reqDoc){
-    const otherUid = reqDoc.from;
+  async function acceptRequest(req){
+    const otherUid = req.from;
     const frId = idForPair(me.uid, otherUid);
 
-    await setDoc(doc(db,"friendRequests", reqDoc.id), { status:"accepted", acceptedAt: serverTimestamp() }, {merge:true});
-
-    await setDoc(doc(db,"friends", frId), {
-      id: frId,
-      members: [me.uid, otherUid].sort(),
-      createdAt: serverTimestamp()
-    }, {merge:true});
+    await setDoc(doc(db,"friendRequests",req.id),{status:"accepted", acceptedAt:serverTimestamp()},{merge:true});
+    await setDoc(doc(db,"friends",frId),{id:frId, members:[me.uid,otherUid].sort(), createdAt:serverTimestamp()},{merge:true});
 
     const roomId = `dm_${frId}`;
-    await setDoc(doc(db,"rooms", roomId), {
-      id: roomId,
-      type: "dm",
-      members: [me.uid, otherUid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastPreview: "",
-      streakCount: 0,
-      streakLastDay: null,
-      snappedToday: {}
-    }, {merge:true});
+    await setDoc(doc(db,"rooms",roomId),{
+      id:roomId,
+      type:"dm",
+      members:[me.uid,otherUid],
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      lastPreview:"",
+      streakCount:0,
+      streakLastDay:null,
+      snappedToday:{}
+    },{merge:true});
+
+    toast("Added");
+  }
+function listenRequests(){
+    const qReq = query(
+      collection(db,"friendRequests"),
+      where("to","==",me.uid),
+      limit(30)
+    );
+    onSnapshot(qReq, async (snap)=>{
+      requestsList.innerHTML = "";
+      const pending = snap.docs.map(d=>({ id:d.id, ...d.data() })).filter(r=>r.status==="pending");
+      if(!pending.length){
+        requestsList.innerHTML = `<div class="li"><div class="left"><div class="t">No requests</div><div class="d">You’re all caught up</div></div></div>`;
+        return;
+      }
+      for(const req of pending){
+        const other = await getDoc(doc(db,"users",req.from));
+        const u = other.data();
+        const li = document.createElement("div");
+        li.className = "li";
+        li.innerHTML = `
+          <div class="left">
+            <div class="t">${u?.displayName || u?.username || "User"}</div>
+            <div class="d">@${u?.username || ""}</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="snap">Accept</button>
+          </div>
+        `;
+        li.querySelector("button").onclick = ()=>acceptRequest(req);
+        requestsList.appendChild(li);
+      }
+    });
   }
 
-  async function declineRequest(reqDoc){
-    await setDoc(doc(db,"friendRequests", reqDoc.id), { status:"declined" }, {merge:true});
+        const req = d.data();
+        const other = await getDoc(doc(db,"users",req.from));
+        const u = other.data();
+
+        const li = document.createElement("div");
+        li.className = "li";
+        li.innerHTML = `
+          <div class="left">
+            <div class="t">${u?.displayName || u?.username || "User"}</div>
+            <div class="d">@${u?.username || ""}</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="snap">Accept</button>
+          </div>
+        `;
+        li.querySelector("button").onclick = ()=>acceptRequest({ id:d.id, ...req });
+        requestsList.appendChild(li);
+      }
+      if(!snap.size) requestsList.innerHTML = `<div class="li"><div class="left"><div class="t">No requests</div><div class="d">You’re all caught up</div></div></div>`;
+    });
   }
 
-  btnCreateGroup.onclick = async () => {
+  btnCreateGroup.onclick = async ()=>{
     if(!me) return;
     const gid = `grp_${me.uid}_${Date.now()}`;
-    await setDoc(doc(db,"rooms", gid), {
-      id: gid,
-      type: "group",
-      name: "Group",
-      owner: me.uid,
-      members: [me.uid],
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastPreview: "",
-      streakCount: 0,
-      streakLastDay: null,
-      snappedToday: {}
-    }, {merge:true});
+    await setDoc(doc(db,"rooms",gid),{
+      id:gid, type:"group", name:"Group", owner:me.uid,
+      members:[me.uid],
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp(),
+      lastPreview:"",
+      streakCount:0, streakLastDay:null, snappedToday:{}
+    },{merge:true});
     toast("Group created");
   };
 
-  // ---------- Chat open/close ----------
-  btnBack.onclick = () => closeChat();
-  btnSignOutMini.onclick = async () => { await signOut(auth); };
+  // ---------- CHAT OPEN/CLOSE ----------
+  btnBack.onclick = ()=>closeChat();
+  btnSignOutMini.onclick = async ()=>{ await signOut(auth); };
 
   function closeChat(){
     chatModal.classList.add("hidden");
     activeRoomId = null;
     activeRoom = null;
+    replyTo = null;
+    replyBar.classList.remove("on");
     if(activeRoomUnsub) activeRoomUnsub();
     if(typingUnsub) typingUnsub();
     if(otherUserUnsub) otherUserUnsub();
-    activeRoomUnsub = null;
-    typingUnsub = null;
-    otherUserUnsub = null;
+    activeRoomUnsub = typingUnsub = otherUserUnsub = null;
     msgs.style.backgroundImage = "";
     typingIndicator.classList.add("hidden");
     onlineIndicator.classList.add("hidden");
   }
 
   // Wallpaper
-  btnWallpaper.onclick = () => wallFile.click();
-  wallFile.addEventListener("change", async () => {
+  btnWallpaper.onclick = ()=> wallFile.click();
+  wallFile.addEventListener("change", ()=>{
     if(!activeRoomId) return;
     const f = wallFile.files?.[0];
     if(!f) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = ()=>{
       const url = reader.result;
       localStorage.setItem(wallKey(activeRoomId), url);
       msgs.style.backgroundImage = `url('${url}')`;
@@ -749,49 +814,54 @@
   });
 
   // Nickname
-  btnNick.onclick = () => {
+  btnNick.onclick = ()=>{
     if(!activeRoomId) return;
     const cur = localStorage.getItem(nickKey(activeRoomId)) || "";
     const n = prompt("Custom name for this chat", cur);
     if(n === null) return;
     localStorage.setItem(nickKey(activeRoomId), n);
-    chatTitle.textContent = n || (activeRoom?.title || "Chat");
+    chatTitle.textContent = n || (activeRoom?.title || activeRoom?.name || "Chat");
   };
 
   // Typing indicator
   let typingTimer = null;
-  msgInput.addEventListener("input", async () => {
+  msgInput.addEventListener("input", async ()=>{
     if(!me || !activeRoomId) return;
     const myTypingRef = doc(db,"rooms",activeRoomId,"typing",me.uid);
-    await setDoc(myTypingRef, { uid: me.uid, typing:true, at: serverTimestamp() }, {merge:true});
+    await setDoc(myTypingRef,{ uid:me.uid, typing:true, at:serverTimestamp() },{merge:true});
     clearTimeout(typingTimer);
-    typingTimer = setTimeout(async () => {
-      await setDoc(myTypingRef, { typing:false }, {merge:true});
+    typingTimer = setTimeout(async ()=>{
+      await setDoc(myTypingRef,{ typing:false },{merge:true});
     }, 900);
   });
 
   function listenTyping(){
     if(!activeRoomId) return;
     const qy = query(collection(db,"rooms",activeRoomId,"typing"));
-    typingUnsub = onSnapshot(qy, (snap) => {
-      let otherTyping = false;
+    typingUnsub = onSnapshot(qy,(snap)=>{
+      let otherTyping=false;
       snap.forEach(d=>{
-        const t = d.data();
-        if(t.uid !== me.uid && t.typing === true) otherTyping = true;
+        const t=d.data();
+        if(t.uid!==me.uid && t.typing===true) otherTyping=true;
       });
       typingIndicator.classList.toggle("hidden", !otherTyping);
     });
   }
 
-  // STREAKS (snap-only) DM: both snap today, GROUP: all snap today
+  // Reply UI
+  replyCancel.onclick = ()=>{
+    replyTo = null;
+    replyBar.classList.remove("on");
+  };
+
+  // ---------- STREAK (snap-only) ----------
   async function updateSnapStreak(roomId, senderUid){
-    const roomRef = doc(db, "rooms", roomId);
+    const roomRef = doc(db,"rooms",roomId);
     const snap = await getDoc(roomRef);
     if(!snap.exists()) return;
 
     const room = snap.data();
-    const members = Array.isArray(room.members) ? room.members : [];
-
+    const members = Array.isArray(room.members)?room.members:[];
     const today = utcDayKey();
     const yKey = yesterdayKey();
 
@@ -800,55 +870,65 @@
     let snappedToday = room.snappedToday || {};
 
     snappedToday = { ...(snappedToday||{}), [senderUid]: true };
-    const allDone = members.length >= 2 && members.every(uid => snappedToday[uid] === true);
+    const allDone = members.length>=2 && members.every(uid=>snappedToday[uid]===true);
 
     if(allDone){
       if(streakLastDay !== today){
-        streakCount = (streakLastDay === yKey) ? (streakCount + 1) : 1;
+        streakCount = (streakLastDay === yKey) ? (streakCount+1) : 1;
         streakLastDay = today;
       }
       const reset = {};
-      members.forEach(uid => reset[uid] = false);
+      members.forEach(uid=>reset[uid]=false);
       snappedToday = reset;
     }
 
-    await setDoc(roomRef, {
-      streakCount,
-      streakLastDay,
-      snappedToday,
-      updatedAt: serverTimestamp()
-    }, { merge:true });
+    await setDoc(roomRef,{ streakCount, streakLastDay, snappedToday, updatedAt:serverTimestamp() },{merge:true});
+    userStreak.textContent = streakCount || 0;
   }
 
-  // ---------- Render messages ----------
+  // ---------- RENDER MSGS ----------
   function renderMsg(m){
     const div = document.createElement("div");
     div.className = "bubble" + (m.uid===me.uid ? " me" : "");
 
-    if(m.type === "snap" && m.mediaURL){
-      div.innerHTML = `<img /><div class="s"></div>`;
+    // swipe-to-reply (right swipe)
+    let sx=0, swiping=false;
+    div.addEventListener("touchstart",(e)=>{
+      sx = e.touches[0].clientX; swiping=true;
+    },{passive:true});
+    div.addEventListener("touchmove",(e)=>{
+      if(!swiping) return;
+      const dx = e.touches[0].clientX - sx;
+      if(dx > 60){
+        swiping=false;
+        replyTo = { mid:m.id || null, text:(m.text || (m.type==="snap"?"Snap":m.type==="audio"?"Voice":"Media")), from:(m.fromName||"") };
+        replyText.textContent = `: ${replyTo.text.slice(0,32)}${replyTo.text.length>32?"…":""}`;
+        replyBar.classList.add("on");
+      }
+    },{passive:true});
+    div.addEventListener("touchend",()=>{ swiping=false; });
+
+    let head = "";
+    if(m.reply?.text){
+      head = `<div class="quote">${(m.reply.from||"").slice(0,18)}: ${String(m.reply.text).slice(0,60)}${String(m.reply.text).length>60?"…":""}</div>`;
+    }
+
+    if(m.type==="snap" && m.mediaURL){
+      div.innerHTML = `${head}<img /><div class="s"></div>`;
       div.querySelector("img").src = m.mediaURL;
-      div.querySelector(".s").textContent = m.fromName || m.email || "";
+      div.querySelector(".s").textContent = m.fromName || "";
       return div;
     }
-
-    if(m.type === "video" && m.mediaURL){
-      div.innerHTML = `<video controls playsinline></video><div class="s"></div>`;
-      div.querySelector("video").src = m.mediaURL;
-      div.querySelector(".s").textContent = m.fromName || m.email || "";
-      return div;
-    }
-
-    if(m.type === "audio" && m.mediaURL){
-      div.innerHTML = `<audio controls></audio><div class="s"></div>`;
+    if(m.type==="audio" && m.mediaURL){
+      div.innerHTML = `${head}<audio controls></audio><div class="s"></div>`;
       div.querySelector("audio").src = m.mediaURL;
-      div.querySelector(".s").textContent = m.fromName || m.email || "";
+      div.querySelector(".s").textContent = m.fromName || "";
       return div;
     }
 
-    div.innerHTML = `<div class="t"></div><div class="s"></div>`;
+    div.innerHTML = `${head}<div class="t"></div><div class="s"></div>`;
     div.querySelector(".t").textContent = m.text || "";
-    div.querySelector(".s").textContent = m.fromName || m.email || "";
+    div.querySelector(".s").textContent = m.fromName || "";
     return div;
   }
 
@@ -868,285 +948,325 @@
     if(otherUserUnsub) otherUserUnsub();
     listenTyping();
 
-    // Set chat pill + presence for DM
+    // show streak count on user sheet when DM
+    userStreak.textContent = roomData.streakCount || 0;
+
     await setupChatHeaderPresence(roomData);
 
-    const qMsgs = query(collection(db,"rooms",roomId,"messages"), orderBy("createdAt","desc"), limit(80));
-    activeRoomUnsub = onSnapshot(qMsgs, (snap) => {
-      const arr = [];
-      snap.forEach(d => arr.push({ id:d.id, ...d.data() }));
+    const qMsgs = query(collection(db,"rooms",roomId,"messages"), orderBy("createdAt","desc"), limit(120));
+    activeRoomUnsub = onSnapshot(qMsgs,(snap)=>{
+      const arr=[];
+      snap.forEach(d=>arr.push({ id:d.id, ...d.data() }));
       arr.reverse();
-
-      msgs.innerHTML = "";
+      msgs.innerHTML="";
       for(const m of arr) msgs.appendChild(renderMsg(m));
       msgs.scrollTop = msgs.scrollHeight;
     });
   }
 
-  // ---------- Send text ----------
+  // ---------- SEND TEXT ----------
   async function sendText(){
     if(!me || !activeRoomId) return;
     const text = msgInput.value.trim();
     if(!text) return;
-    msgInput.value = "";
 
-    await addDoc(collection(db,"rooms",activeRoomId,"messages"), {
+    const payload = {
       type:"text",
       text,
       uid: me.uid,
-      email: me.email,
       fromName: meProfile?.displayName || meProfile?.username || "",
       createdAt: serverTimestamp()
-    });
+    };
 
-    await setDoc(doc(db,"rooms",activeRoomId), {
-      lastPreview: text,
-      updatedAt: serverTimestamp()
-    }, {merge:true});
+    if(replyTo){
+      payload.reply = { mid: replyTo.mid || null, text: replyTo.text || "", from: replyTo.from || "" };
+      replyTo = null;
+      replyBar.classList.remove("on");
+    }
+
+    msgInput.value = "";
+
+    await addDoc(collection(db,"rooms",activeRoomId,"messages"), payload);
+
+    await setDoc(doc(db,"rooms",activeRoomId),{ lastPreview:text, updatedAt:serverTimestamp() },{merge:true});
+    await setDoc(doc(db,"users",me.uid),{ textscore: increment(1) },{merge:true});
   }
   sendBtn.onclick = sendText;
-  msgInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") sendText(); });
+  msgInput.addEventListener("keydown",(e)=>{ if(e.key==="Enter") sendText(); });
 
-  // ---------- Camera: best-effort iPhone Safari ----------
-  function mediaSupported(mime){
-    try{ return MediaRecorder.isTypeSupported(mime); }catch{return false;}
-  }
-
+  // ---------- CAMERA (best-effort iPhone Safari) ----------
   async function startCamera(){
     try{
       if(!navigator.mediaDevices?.getUserMedia){
-        camHint.classList.add("on");
-        toast("Camera not supported");
-        return;
+        camHint.classList.add("on"); toast("Camera not supported"); return;
       }
-      if(camStream){
-        camStream.getTracks().forEach(t=>t.stop());
-        camStream=null;
-      }
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing },
-        audio: false
-      });
+      if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+      camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:facing }, audio:false });
       camVideo.srcObject = camStream;
       camOn = true;
       camHint.classList.remove("on");
       await camVideo.play().catch(()=>{});
-    } catch (e){
-      camOn = false;
+    }catch{
+      camOn=false;
       camHint.classList.add("on");
       toast("Allow camera permission");
     }
   }
-
   async function stopCamera(){
-    if(camStream){
-      camStream.getTracks().forEach(t=>t.stop());
-      camStream = null;
-    }
-    camOn = false;
+    if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+    camOn=false;
   }
 
-  btnEnableCam.onclick = async ()=>{ await startCamera(); };
-
-  btnFlipCam.onclick = async () => {
-    facing = (facing === "user") ? "environment" : "user";
+  btnEnableCam.onclick = ()=>startCamera();
+  btnFlipCam.onclick = async ()=>{
+    facing = (facing==="user") ? "environment" : "user";
     if(camOn) await startCamera();
   };
-
-  btnCamOnOff.onclick = async () => {
-    if(camOn) { await stopCamera(); camHint.classList.add("on"); }
-    else { await startCamera(); }
+  btnCamOnOff.onclick = async ()=>{
+    if(camOn){ await stopCamera(); camHint.classList.add("on"); }
+    else await startCamera();
   };
 
-  // Snap capture
-  $("btnShutter").addEventListener("click", async () => {
-    if(!camOn || !camVideo.videoWidth) { toast("Camera not ready 
-
-    if(!camOn || !camVideo.videoWidth) { toast("Camera not ready"); return; }
+  // Capture snap
+  btnShutter.addEventListener("click", async ()=>{
+    if(!camOn || !camVideo.videoWidth){ toast("Camera not ready"); return; }
     const canvas = document.createElement("canvas");
     canvas.width = camVideo.videoWidth;
     canvas.height = camVideo.videoHeight;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(camVideo, 0, 0, canvas.width, canvas.height);
-    lastSnapBlob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.9));
+    ctx.drawImage(camVideo,0,0,canvas.width,canvas.height);
+    lastSnapBlob = await new Promise(res=>canvas.toBlob(res,"image/jpeg",0.9));
     toast("Snap captured");
   });
 
-  // Upload snap
   async function uploadSnap(blob){
     const path = `snaps/${me.uid}/${Date.now()}.jpg`;
-    const r = ref(storage, path);
-    await uploadBytes(r, blob);
+    const r = ref(storage,path);
+    await uploadBytes(r,blob,{contentType:"image/jpeg"});
     return await getDownloadURL(r);
   }
 
   async function pickRoomToSend(){
     if(activeRoomId) return activeRoomId;
-    const qRooms = query(
-      collection(db,"rooms"),
-      where("members","array-contains", me.uid),
-      orderBy("updatedAt","desc"),
-      limit(1)
-    );
+    const qRooms = query(collection(db,"rooms"), where("members","array-contains",me.uid), orderBy("updatedAt","desc"), limit(1));
     const snap = await getDocs(qRooms);
     if(snap.empty) return null;
     return snap.docs[0].id;
   }
 
-  btnSendSnap.onclick = async () => {
+  btnSendSnap.onclick = async ()=>{
     if(!lastSnapBlob){ toast("Take a snap first"); return; }
     const roomId = await pickRoomToSend();
     if(!roomId){ toast("No chat to send to"); return; }
 
     const url = await uploadSnap(lastSnapBlob);
-    await addDoc(collection(db,"rooms",roomId,"messages"), {
+
+    await addDoc(collection(db,"rooms",roomId,"messages"),{
       type:"snap",
       mediaURL:url,
       uid:me.uid,
-      fromName:meProfile?.displayName||meProfile?.username||"",
+      fromName: meProfile?.displayName || meProfile?.username || "",
       createdAt:serverTimestamp()
     });
 
     await updateSnapStreak(roomId, me.uid);
-    await setDoc(doc(db,"rooms",roomId), {
-      lastPreview:"Snap",
-      updatedAt:serverTimestamp()
-    }, {merge:true});
 
-    await setDoc(doc(db,"users",me.uid), {
-      snapscore: increment(1)
-    }, {merge:true});
+    await setDoc(doc(db,"rooms",roomId),{ lastPreview:"Snap", updatedAt:serverTimestamp() },{merge:true});
+    await setDoc(doc(db,"users",me.uid),{ snapscore: increment(1) },{merge:true});
 
-    lastSnapBlob = null;
+    lastSnapBlob=null;
     toast("Snap sent");
   };
 
-  // ---------- Voice notes (Snap style hold-to-record) ----------
-  btnMic.addEventListener("touchstart", async ()=>{
-    if(recordingAudio) return;
-    recordingAudio = true;
-    btnMic.classList.add("rec");
-    micChunks = [];
-    micStream = await navigator.mediaDevices.getUserMedia({audio:true});
-    micRecorder = new MediaRecorder(micStream);
-    micRecorder.ondataavailable = e => micChunks.push(e.data);
-    micRecorder.start();
-  });
+  // (Optional) chat camera shortcut = go camera screen
+  btnChatSnap.onclick = ()=>{ setScreen(1); toast("Take snap then Send Snap"); };
 
-  btnMic.addEventListener("touchend", async ()=>{
+  // ---------- VOICE NOTES (hold to record) ----------
+  async function startVoice(){
+    if(recordingAudio || !activeRoomId) return;
+    try{
+      recordingAudio=true;
+      btnMic.classList.add("rec");
+      micChunks=[];
+      micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      const mime = (window.MediaRecorder && MediaRecorder.isTypeSupported("audio/webm")) ? "audio/webm" : "";
+      micRecorder = new MediaRecorder(micStream, mime?{mimeType:mime}:undefined);
+      micRecorder.ondataavailable = e => micChunks.push(e.data);
+      micRecorder.start();
+    }catch{
+      recordingAudio=false;
+      btnMic.classList.remove("rec");
+      toast("Allow microphone");
+    }
+  }
+
+  async function stopVoice(){
     if(!recordingAudio) return;
-    recordingAudio = false;
+    recordingAudio=false;
     btnMic.classList.remove("rec");
-    micRecorder.stop();
+    try{ micRecorder.stop(); }catch{}
     micRecorder.onstop = async ()=>{
-      micStream.getTracks().forEach(t=>t.stop());
-      const blob = new Blob(micChunks,{type:"audio/webm"});
+      try{ micStream.getTracks().forEach(t=>t.stop()); }catch{}
+      const blob = new Blob(micChunks,{type: micRecorder.mimeType || "audio/webm"});
       const r = ref(storage,`voice/${me.uid}/${Date.now()}.webm`);
-      await uploadBytes(r,blob);
+      await uploadBytes(r,blob,{contentType: blob.type});
       const url = await getDownloadURL(r);
 
       await addDoc(collection(db,"rooms",activeRoomId,"messages"),{
         type:"audio",
         mediaURL:url,
         uid:me.uid,
-        fromName:meProfile?.displayName||"",
+        fromName: meProfile?.displayName || meProfile?.username || "",
         createdAt:serverTimestamp()
       });
 
-      await setDoc(doc(db,"rooms",activeRoomId),{
-        lastPreview:"🎙️ Voice",
-        updatedAt:serverTimestamp()
-      },{merge:true});
+      await setDoc(doc(db,"rooms",activeRoomId),{ lastPreview:"🎙️ Voice", updatedAt:serverTimestamp() },{merge:true});
     };
-  });
+  }
 
-  // ---------- Presence in chat header ----------
+  btnMic.addEventListener("touchstart", startVoice, {passive:true});
+  btnMic.addEventListener("touchend", stopVoice, {passive:true});
+  // fallback for non-touch
+  btnMic.addEventListener("mousedown", startVoice);
+  btnMic.addEventListener("mouseup", stopVoice);
+
+  // ---------- OTHER USER PRESENCE + HEADER AVATAR ----------
   async function setupChatHeaderPresence(room){
     if(room.type!=="dm") return;
-    const other = room.members.find(u=>u!==me.uid);
-    const uref = doc(db,"users",other);
+
+    const otherUid = room.members.find(u=>u!==me.uid);
+    const uref = doc(db,"users",otherUid);
+
     otherUserUnsub = onSnapshot(uref,(s)=>{
-      const d = s.data();
-      onlineIndicator.classList.toggle("hidden", !d?.online);
-      userPresence.textContent = d?.online ? "Online" : "Offline";
-      userSheetTitle.textContent = d?.displayName || d?.username || "User";
-      userSnapscore.textContent = d?.snapscore || 0;
+      const d=s.data()||{};
+      onlineIndicator.classList.toggle("hidden", !d.online);
+      userPresence.textContent = d.online ? "Online" : "Offline";
+
+      userSheetTitle.textContent = d.displayName || d.username || "User";
+      userSnapscore.textContent = d.snapscore || 0;
+      userTextscore.textContent = d.textscore || 0;
+
+      // chat pill = their pfp like Snapchat bitmoji slot
+      if(d.photoURL){
+        chatPill.innerHTML = `<img src="${d.photoURL}"/>`;
+      }else{
+        chatPill.textContent = (d.displayName || d.username || "U")[0];
+      }
     });
   }
 
-  chatHeaderTap.onclick = ()=> userSheet.classList.add("on");
-  btnCloseUser.onclick = ()=> userSheet.classList.remove("on");
-
-  // ---------- Rooms list ----------
+  // ---------- PROFILE / SCORES ----------
   async function refreshMeProfile(){
     const s = await getDoc(doc(db,"users",me.uid));
-    meProfile = s.data();
-    mySnapscore.textContent = meProfile?.snapscore || 0;
+    meProfile = s.data() || {};
+    mySnapscore.textContent = meProfile.snapscore || 0;
+    myTextscore.textContent = meProfile.textscore || 0;
   }
 
   function paintMePill(){
-    if(meProfile?.photoURL){
-      mePill.innerHTML = `<img src="${meProfile.photoURL}"/>`;
-    } else {
-      mePill.textContent = (meProfile?.displayName||"I")[0];
-    }
+    if(meProfile?.photoURL) mePill.innerHTML = `<img src="${meProfile.photoURL}"/>`;
+    else mePill.textContent = (meProfile?.displayName || "I")[0];
   }
 
-  function listenRooms(){
-    const qRooms = query(
-      collection(db,"rooms"),
-      where("members","array-contains",me.uid),
-      orderBy("updatedAt","desc"),
-      limit(50)
-    );
+  // basic pfp upload without cropper logic (still works)
+  let croppedPfpBlob = null;
+  btnCropPfp.onclick = ()=>{
+    const f = pfpFile.files?.[0];
+    if(!f){ toast("Pick a photo first"); return; }
+    // simple: use original file as "cropped" for now
+    croppedPfpBlob = f;
+    toast("Ready to save");
+  };
 
-    onSnapshot(qRooms, async snap=>{
-      chatList.innerHTML="";
+  btnSaveProfile.onclick = async ()=>{
+    if(!me) return;
+    profileMsg.textContent = "";
+    try{
+      const updates = {};
+      if(displayName.value.trim()) updates.displayName = displayName.value.trim();
+
+      if(croppedPfpBlob){
+        const r = ref(storage,`pfps/${me.uid}.jpg`);
+        await uploadBytes(r, croppedPfpBlob, {contentType:"image/jpeg"});
+        updates.photoURL = await getDownloadURL(r);
+        croppedPfpBlob = null;
+      }
+
+      if(Object.keys(updates).length) await setDoc(doc(db,"users",me.uid), updates, {merge:true});
+      await refreshMeProfile();
+      paintMePill();
+      profileMsg.textContent = "Saved";
+      toast("Saved");
+    }catch(e){
+      profileMsg.textContent = e.message;
+    }
+  };
+
+  // ---------- ROOMS LIST ----------
+  function listenRooms(){
+    const qRooms = query(collection(db,"rooms"), where("members","array-contains",me.uid), orderBy("updatedAt","desc"), limit(50));
+    onSnapshot(qRooms, async (snap)=>{
+      chatList.innerHTML = "";
       for(const d of snap.docs){
         const r = d.data();
-        const other = r.members.find(u=>u!==me.uid);
-        const u = await getDoc(doc(db,"users",other));
-        const ud = u.data();
+        const otherUid = (r.type==="dm") ? r.members.find(u=>u!==me.uid) : null;
+
+        let title = r.name || "Chat";
+        let photoURL = "";
+        let online = false;
+
+        if(otherUid){
+          const u = await getDoc(doc(db,"users",otherUid));
+          const ud = u.data()||{};
+          title = ud.displayName || ud.username || "User";
+          photoURL = ud.photoURL || "";
+          online = !!ud.online;
+        }
 
         const row = document.createElement("div");
-        row.className="row";
-        row.innerHTML=`
+        row.className = "row";
+        row.innerHTML = `
           <div class="who">
             <div class="avatar">
-              ${ud?.photoURL?`<img src="${ud.photoURL}"/>`:(ud?.displayName||"U")[0]}
-              <div class="onlineDot ${ud?.online?"on":""}"></div>
+              ${photoURL ? `<img src="${photoURL}"/>` : title[0]}
+              <div class="onlineDot ${online?"on":""}"></div>
             </div>
             <div class="meta">
-              <div class="name">${ud?.displayName||ud?.username}</div>
-              <div class="sub">${r.lastPreview||"Tap to open"}</div>
+              <div class="name">${title}</div>
+              <div class="sub">${r.lastPreview || "Tap to open"}</div>
             </div>
           </div>
         `;
-        row.onclick=()=>openRoom(d.id,{...r,title:ud?.displayName});
+        row.onclick = ()=>openRoom(d.id, { ...r, title });
         chatList.appendChild(row);
       }
     });
   }
 
-  // ---------- Auth state ----------
+  // ---------- AUTH STATE ----------
   onAuthStateChanged(auth, async (u)=>{
     if(u){
-      me=u;
+      me = u;
       authScreen.classList.add("hidden");
       mainApp.classList.remove("hidden");
+
       await refreshMeProfile();
       paintMePill();
+
       startPresence();
       setScreen(1);
       await startCamera();
+
       listenRooms();
-    } else {
+      listenRequests();
+    }else{
       stopPresence();
       mainApp.classList.add("hidden");
       authScreen.classList.remove("hidden");
       await stopCamera();
+      closeChat();
     }
   });
 </script>
-
-
+</body>
+</html>
