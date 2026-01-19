@@ -633,8 +633,20 @@
     }
   }
 
-  $("btnLogin").onclick = doLogin;
-  $("btnSignup").onclick = doSignup;
+$("btnLogin").onclick = doLogin;
+$("btnSignup").onclick = doSignup;
+
+loginUser.addEventListener("keydown", e => {
+  if (e.key === "Enter") btnLogin.click();
+});
+
+pass.addEventListener("keydown", e => {
+  if (e.key === "Enter") btnLogin.click();
+});
+
+signupUser.addEventListener("keydown", e => {
+  if (e.key === "Enter") btnSignup.click();
+});
 
   // Enter key should login
   loginUser.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
